@@ -4,6 +4,9 @@
  * http://www.apache.org/licenses/LICENSE-2.0
  */
 
+/*
+Package hello provides a hello world greeting.
+*/
 package hello
 
 import (
@@ -11,7 +14,7 @@ import (
 	"time"
 )
 
-// Greeting of Hello World in Golang
+// Greeting of Hello World in Golang.
 func Greeting() string {
 	return fmt.Sprintf("Hello, World! %s", time.Now())
 }
