@@ -3,31 +3,31 @@
 # Licensed under the Apache License, Version 2.0
 # http://www.apache.org/licenses/LICENSE-2.0
 #
-FROM amazonlinux:2018.03.0.20200318.1
+FROM amazonlinux:2018.03.0.20200318.1 AS builder
 ARG MODULE
 ENV MODULE=${MODULE}
 ENV GOROOT=/usr/lib/golang
-ENV GOPATH=/app/go
+ENV GOPATH=/go
 ENV GOCACHE=${GOPATH}/.cache/go-build
 ENV GOENV=${GOPATH}/.config/go/env
 ENV GO111MODULE=on
 ENV PATH=${GOROOT}/bin:${PATH}
 
+WORKDIR /go/src
+COPY go.mod go.sum ${MODULE}/
+COPY cmd/ ${MODULE}/cmd/
+COPY pkg/ ${MODULE}/pkg/
 RUN yum install -y golang && \
-    useradd --system --no-create-home appuser && \
-    mkdir -m 755 -p /app/go/src && \
-    chown -R appuser:appuser /app
-
-WORKDIR /app/go/src
-COPY --chown=appuser:appuser go.mod go.sum ${MODULE}/
-COPY --chown=appuser:appuser cmd/ ${MODULE}/cmd/
-COPY --chown=appuser:appuser pkg/ ${MODULE}/pkg/
-
-USER appuser
-RUN go env && \
+    go env && \
     cd ${MODULE} && \
     go test ./... && \
     go install ./...
 
+FROM amazonlinux:2018.03.0.20200318.1 AS runtime
+RUN yum install -y shadow-utils && \
+    useradd --system --no-create-home appuser && \
+    mkdir -m 755 -p /app/bin && \
+    chown -R appuser:appuser /app
+COPY --from=builder --chown=appuser:appuser /go/bin/hello /app/bin/hello
 EXPOSE 9090
-CMD ["/app/go/bin/hello"]
+CMD ["/app/bin/hello"]

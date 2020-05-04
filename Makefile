@@ -4,7 +4,7 @@
 # http://www.apache.org/licenses/LICENSE-2.0
 #
 image := github.com/krautbax/goxamples
-image_tags := alpine buster amazonlinux
+image_tags := alpine debian amazonlinux
 runnable_images := $(image_tags:%=$(image)\:%)
 published_port := 9090
 exposed_port := 9090
@@ -22,8 +22,13 @@ images: $(image_tags)
 test:
 	@port=$(published_port); for image in $(runnable_images); do \
 		if [ -n "$$(docker images $$image -q)" ]; then \
+			tries=0; \
 			command="docker run --publish $$port:$(exposed_port) $$image"; echo $$command && eval "($$command &)"; \
-			while [ $$(curl -o /dev/null -s -w "%{http_code}" http://localhost:$$port/health) -ne 200 ]; do sleep 1; done; \
+			while [ $$tries -lt 5 ] && [ $$(curl -o /dev/null -s -w "%{http_code}" http://localhost:$$port/health) -ne 200 ]; do \
+				tries=$$(expr $$tries + 1); \
+				sleep 1; \
+			done; \
+			if [ $$tries -eq 5 ]; then exit 1; fi; \
 			greeting=$$(curl -s http://localhost:$$port/greet); \
 			port=$$(expr $$port + 1); echo $$greeting && echo; \
 		fi; \
@@ -38,7 +43,7 @@ $(image_tags): build/$$@/Dockerfile
 	@dockerfile_epochtime=$$(date -j $$(date -ur $< +%m%d%H%M%Y.%S) +%s); \
 	image_epochtime=$$(date -j -f "%FT%T" $$(docker image inspect --format "{{.Created}}" $(image):$@ 2>/dev/null) +%s 2>/dev/null); \
 	if [ -z "$$image_epochtime" ] || [ $$dockerfile_epochtime -gt $$image_epochtime ]; then \
-		command="docker build $(build_options) --file build/$@/Dockerfile --tag $(image):$@ ."; \
+		command="docker build $(build_options) --file $< --tag $(image):$@ ."; \
 		echo $$command && eval $$command && echo; \
 	fi; \
 
