@@ -20,10 +20,12 @@ all: images test
 images: $(image_tags)
 
 test:
-	@for image in $(runnable_images); do \
+	@port=$(published_port); for image in $(runnable_images); do \
 		if [ -n "$$(docker images $$image -q)" ]; then \
-			command="(docker run --publish $(published_port):$(exposed_port) $$image &) && sleep 2 && curl http://localhost:$(published_port)"; \
-			echo $$command && eval $$command && echo; \
+			command="docker run --publish $$port:$(exposed_port) $$image"; echo $$command && eval "($$command &)"; \
+			while [ "$$(curl -o /dev/null -s -w "%{http_code}" http://localhost:$$port/health)" != "200" ]; do sleep 1; done; \
+			greeting=$$(curl -s http://localhost:$$port/greet); \
+			port=$$(expr $$port + 1); echo $$greeting && echo; \
 		fi; \
 	done
 

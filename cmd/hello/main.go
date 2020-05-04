@@ -7,7 +7,6 @@
 package main
 
 import (
-	"bufio"
 	"fmt"
 	"log"
 	"net/http"
@@ -25,42 +24,42 @@ var (
 	signals chan os.Signal = make(chan os.Signal)
 )
 
-var (
-	writer *bufio.Writer = bufio.NewWriter(os.Stdout)
-	logger *log.Logger   = log.New(writer, "", log.LstdFlags|log.Lmicroseconds|log.LUTC)
-)
-
 func init() {
 	signal.Notify(signals, syscall.SIGINT, syscall.SIGTERM, syscall.SIGKILL, syscall.SIGQUIT)
+	log.SetFlags(log.LstdFlags | log.Lmicroseconds | log.LUTC)
+}
+
+func health(w http.ResponseWriter, r *http.Request) {
+	log.Println("Health checked")
+	fmt.Fprintln(w, "OK")
 }
 
 func greet(w http.ResponseWriter, r *http.Request) {
+	log.Println("Greeting served")
 	fmt.Fprintln(w, hello.Greeting())
 	quits <- true
 }
 
 func run() {
-	logger.Println("Server starting")
-	writer.Flush()
+	log.Println("Server starting")
 	errors <- http.ListenAndServe(":9090", nil)
 }
 
 func wait() {
-	defer time.Sleep(2 * time.Second)
-	defer writer.Flush()
-
 	select {
 	case <-quits:
-		logger.Println("Server exiting")
+		log.Println("Server exiting")
+		time.Sleep(2 * time.Second)
 	case err := <-errors:
-		logger.Println(err)
+		log.Println(err)
 	case sig := <-signals:
-		logger.Printf("OS shutdown signal %+v\n", sig)
+		log.Printf("OS shutdown signal %+v\n", sig)
 	}
 }
 
 func main() {
-	http.HandleFunc("/", greet)
+	http.HandleFunc("/health", health)
+	http.HandleFunc("/greet", greet)
 	go run()
 	wait()
 }
