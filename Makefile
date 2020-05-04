@@ -29,7 +29,8 @@ test:
 		fi; \
 	done
 
-# Using date command on BSD Linux.  You can always just check to see if the image exists and skip the modification check on the Dockerfile.
+# Using date command from BSD UNIX.
+# You can always just check to see if the image exists and skip the modification check on the Dockerfile.
 # No secondary expansion and no dependency on the Dockerfile.
 # i.e. @if [ -z "$$(docker images $(image):$@ -q)" ]; then \ ...
 .SECONDEXPANSION:
