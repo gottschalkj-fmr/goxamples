@@ -23,14 +23,20 @@ test:
 	@port=$(published_port); for image in $(runnable_images); do \
 		if [ -n "$$(docker images $$image -q)" ]; then \
 			command="docker run --publish $$port:$(exposed_port) $$image"; echo $$command && eval "($$command &)"; \
-			while [ "$$(curl -o /dev/null -s -w "%{http_code}" http://localhost:$$port/health)" != "200" ]; do sleep 1; done; \
+			while [ $$(curl -o /dev/null -s -w "%{http_code}" http://localhost:$$port/health) -ne 200 ]; do sleep 1; done; \
 			greeting=$$(curl -s http://localhost:$$port/greet); \
 			port=$$(expr $$port + 1); echo $$greeting && echo; \
 		fi; \
 	done
 
-$(image_tags):
-	@if [ -z "$$(docker images $(image):$@ -q)" ]; then \
+# Using date command on BSD Linux.  You can always just check to see if the image exists and skip the modification check on the Dockerfile.
+# No secondary expansion and no dependency on the Dockerfile.
+# i.e. @if [ -z "$$(docker images $(image):$@ -q)" ]; then \ ...
+.SECONDEXPANSION:
+$(image_tags): build/$$@/Dockerfile
+	@dockerfile_epochtime=$$(date -j $$(date -ur $< +%m%d%H%M%Y.%S) +%s); \
+	image_epochtime=$$(date -j -f "%FT%T" $$(docker image inspect --format "{{.Created}}" $(image):$@ 2>/dev/null) +%s 2>/dev/null); \
+	if [ -z "$$image_epochtime" ] || [ $$dockerfile_epochtime -gt $$image_epochtime ]; then \
 		command="docker build $(build_options) --file build/$@/Dockerfile --tag $(image):$@ ."; \
 		echo $$command && eval $$command && echo; \
 	fi; \
