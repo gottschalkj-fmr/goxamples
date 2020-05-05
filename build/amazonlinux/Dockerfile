@@ -3,7 +3,7 @@
 # Licensed under the Apache License, Version 2.0
 # http://www.apache.org/licenses/LICENSE-2.0
 #
-FROM amazonlinux:2018.03.0.20200318.1 AS builder
+FROM amazonlinux:2 AS builder
 ARG MODULE
 ENV MODULE=${MODULE}
 ENV GOROOT=/usr/lib/golang
@@ -23,7 +23,7 @@ RUN yum install -y golang && \
     go test ./... && \
     go install ./...
 
-FROM amazonlinux:2018.03.0.20200318.1 AS runtime
+FROM amazonlinux:2 AS runtime
 RUN yum install -y shadow-utils && \
     useradd --system --no-create-home appuser && \
     mkdir -m 755 -p /app/bin && \

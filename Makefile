@@ -20,7 +20,8 @@ all: images test
 images: $(image_tags)
 
 test:
-	@port=$(published_port); for image in $(runnable_images); do \
+	@port=$(published_port); \
+	for image in $(runnable_images); do \
 		if [ -n "$$(docker images $$image -q)" ]; then \
 			tries=0; \
 			command="docker run --publish $$port:$(exposed_port) $$image"; echo $$command && eval "($$command &)"; \
