@@ -30,4 +30,5 @@ RUN yum install -y shadow-utils && \
     chown -R appuser:appuser /app
 COPY --from=builder --chown=appuser:appuser /go/bin/hello /app/bin/hello
 EXPOSE 9090
+USER appuser
 CMD ["/app/bin/hello"]
