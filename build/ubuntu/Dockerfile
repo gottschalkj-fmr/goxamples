@@ -3,11 +3,10 @@
 # Licensed under the Apache License, Version 2.0
 # http://www.apache.org/licenses/LICENSE-2.0
 #
-FROM golang:1.14-alpine AS builder
+FROM golang:1.14-buster AS builder
 ARG MODULE
 ENV MODULE=${MODULE}
 ENV GOROOT=/usr/local/go
-ENV CGO_ENABLED=0
 ENV PATH=${GOROOT}/bin:${PATH}
 
 WORKDIR /go/src
@@ -19,9 +18,8 @@ RUN go env && \
     go test ./... && \
     go install ./...
 
-FROM alpine:3.11 AS runtime
-RUN addgroup -S appuser && \
-    adduser -S -H -G appuser appuser && \
+FROM ubuntu:bionic AS runtime
+RUN useradd --system --no-create-home appuser && \
     mkdir -m 755 -p /app/bin && \
     chown -R appuser:appuser /app
 COPY --from=builder --chown=appuser:appuser /go/bin/hello /app/bin/hello

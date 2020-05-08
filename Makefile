@@ -4,7 +4,7 @@
 # http://www.apache.org/licenses/LICENSE-2.0
 #
 image := github.com/krautbax/goxamples
-image_tags := alpine debian amazonlinux
+image_tags := alpine debian ubuntu amazonlinux
 runnable_images := $(image_tags:%=$(image)\:%)
 published_port := 9090
 exposed_port := 9090
@@ -46,7 +46,7 @@ $(image_tags): build/$$@/Dockerfile
 	if [ -z "$$image_epochtime" ] || [ $$dockerfile_epochtime -gt $$image_epochtime ]; then \
 		command="docker build $(build_options) --file $< --tag $(image):$@ ."; \
 		echo $$command && eval $$command && echo; \
-	fi; \
+	fi
 
 clean:
 	-docker stop $$(docker ps -q) 2>/dev/null
