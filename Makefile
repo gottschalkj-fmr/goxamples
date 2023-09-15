@@ -1,15 +1,15 @@
 #
-# Copyright (c) 2020 krautbax.
+# Copyright (c) 2020 gottschalkj-fmr.
 # Licensed under the Apache License, Version 2.0
 # http://www.apache.org/licenses/LICENSE-2.0
 #
-image := github.com/krautbax/goxamples
+image := github.com/gottschalkjfmr/goxamples
 image_tags := alpine debian ubuntu amazonlinux
 runnable_images := $(image_tags:%=$(image)\:%)
 published_port := 9090
 exposed_port := 9090
 
-module := github.com/krautbax/goxamples
+module := github.com/gottschalkjfmr/goxamples
 build_args := MODULE=$(module)
 build_options := --no-cache --force-rm $(build_args:%=--build-arg %)
 
